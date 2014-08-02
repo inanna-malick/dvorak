@@ -16,26 +16,33 @@ main = runCurses $ do
     closeWindow w
 
 text :: Line -> Update ()
-text (Line xs) = do sequence updates
-                    return ()
-       where updates = map draw xs
-             draw (s,c) = 
-                do setColor c
-                   drawString s
+text (Line xs) = 
+    do sequence updates
+       return ()
+    where updates = map draw xs
+          draw (s,c) = 
+              do setColor c
+                 drawString s
 
 
 -- do all rendering work
 renderWindow :: Window -> WData-> Curses()
-renderWindow w (WData lines config) =  return ()
-  where renderWord typed totype = 
-               do updateWindow w $ updateWord typed totype 
-                  render
+renderWindow w (WData lines config) =  renderLines
+  where startRow = rows config `div` 4
+        
+        renderLines = 
+            do updateWindow w $ updateWord lines startRow
+               render
 
-        updateWord typed totype =
+        updateWord [] _ = return ()
+        updateWord (line:xs) row =
             do drawBox Nothing Nothing
-               moveCursor (rows config `div` 4) (cols config `div` 2)
-               text $ Line [(typed, emphasisColor config), (totype, stdColor config)]
+               moveCursor row (cols config `div` 2)
+               text line
                moveCursor 0 0
+               updateWord xs $ row + 1
+
+
 
 
 
@@ -86,6 +93,7 @@ data Config = Config { stdColor :: ColorID
 
 data Line = Line [(String, ColorID)]
 
+-- next todo: encapsulate all window state in WData. Step function can block waiting for input, flash (doesn't modify window state), yield when $condition
 data WData= WData [Line] Config
 
 
