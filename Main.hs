@@ -11,9 +11,10 @@ main = runCurses $ do
     white <- newColorID ColorWhite ColorBlack 4 
     updateWindow w $ do
         drawBox Nothing Nothing
+    setCursorMode CursorInvisible 
     render
     demandWord w [] word white cyan
-
+    closeWindow w
 
 text :: [(String, ColorID)] -> Update ()
 text xs = do sequence updates
@@ -25,26 +26,28 @@ text xs = do sequence updates
           
 
 
-renderWord :: String -> String -> ColorID -> ColorID -> Update()
-renderWord typed totype white cyan = 
-    do drawBox Nothing Nothing
-       moveCursor 3 10
-       text [(typed, cyan), (totype, white)]
-
 -- window -> already typed -> yet to type -> curse
 demandWord :: Window -> String -> String -> ColorID -> ColorID -> Curses()
-demandWord w typed (c:cs) white cyan =
-    do updateWindow w $ renderWord typed (c:cs) white cyan 
-       render
-       demandChar w c
-       demandWord w (typed ++ [c]) cs white cyan
+demandWord w typed totype white cyan = step typed totype
+  where step typed (c:cs) = 
+            do renderWord typed (c:cs)
+               demandChar w c
+               step (typed ++ [c]) cs
 
-demandWord w typed [] white cyan = 
-    do updateWindow w $ renderWord typed [] white cyan
-       render
-       demandChar w 'q'
+        step typed [] = 
+            do renderWord typed []
+               demandChar w 'q' 
 
+        renderWord typed totype = 
+            do (row, col) <- screenSize
+               updateWindow w $ updateWord typed totype (row `div` 4, col `div` 2)
+               render
 
+        updateWord typed totype (row,col) = 
+            do drawBox Nothing Nothing
+               moveCursor row col
+               text [(typed, cyan), (totype, white)]
+               moveCursor 0 0
 
 
 
