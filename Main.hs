@@ -9,26 +9,40 @@ main = runCurses $ do
     let word = "test"
     cyan <- newColorID ColorCyan ColorBlack 3 
     white <- newColorID ColorWhite ColorBlack 4 
-    updateWindow w $ do
-        drawBox Nothing Nothing
     setCursorMode CursorInvisible 
-    render
-    demandWord w [] word white cyan
+    (rows, cols) <- screenSize
+    let config = Config {stdColor=white, emphasisColor=cyan, rows=rows, cols=cols}
+    demandWord w [] word config
     closeWindow w
 
-text :: [(String, ColorID)] -> Update ()
-text xs = do sequence updates
-             return ()
-      where updates = map draw xs
-            draw (s,c) = 
+text :: Line -> Update ()
+text (Line xs) = do sequence updates
+                    return ()
+       where updates = map draw xs
+             draw (s,c) = 
                 do setColor c
                    drawString s
-          
 
 
--- window -> already typed -> yet to type -> curse
-demandWord :: Window -> String -> String -> ColorID -> ColorID -> Curses()
-demandWord w typed totype white cyan = step typed totype
+-- do all rendering work
+renderWindow :: Window -> WData-> Curses()
+renderWindow w (WData lines config) =  return ()
+  where renderWord typed totype = 
+               do updateWindow w $ updateWord typed totype 
+                  render
+
+        updateWord typed totype =
+            do drawBox Nothing Nothing
+               moveCursor (rows config `div` 4) (cols config `div` 2)
+               text $ Line [(typed, emphasisColor config), (totype, stdColor config)]
+               moveCursor 0 0
+
+
+
+
+
+demandWord :: Window -> String -> String -> Config -> Curses()
+demandWord w typed totype config = step typed totype
   where step typed (c:cs) = 
             do renderWord typed (c:cs)
                demandChar w c
@@ -39,14 +53,13 @@ demandWord w typed totype white cyan = step typed totype
                demandChar w 'q' 
 
         renderWord typed totype = 
-            do (row, col) <- screenSize
-               updateWindow w $ updateWord typed totype (row `div` 4, col `div` 2)
-               render
+               do updateWindow w $ updateWord typed totype 
+                  render
 
-        updateWord typed totype (row,col) = 
+        updateWord typed totype =
             do drawBox Nothing Nothing
-               moveCursor row col
-               text [(typed, cyan), (totype, white)]
+               moveCursor (rows config `div` 4) (cols config `div` 2)
+               text $ Line [(typed, emphasisColor config), (totype, stdColor config)]
                moveCursor 0 0
 
 
@@ -63,3 +76,18 @@ demandChar w c = loop where
                            loop
     handleEvent _ = loop
                   
+-- consider adding rows/columns
+data Config = Config { stdColor :: ColorID
+                     , emphasisColor :: ColorID
+                     , rows :: Integer
+                     , cols :: Integer
+                     } deriving (Show)   
+
+
+data Line = Line [(String, ColorID)]
+
+data WData= WData [Line] Config
+
+
+
+
