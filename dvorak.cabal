@@ -58,7 +58,10 @@ executable dvorak
   
   -- Other library packages from which modules are imported.
   build-depends:       base >=4.6 && <4.7,
-                       ncurses
+                       ncurses,
+                       containers,
+                       csv,
+                       random
 
   -- Directories containing source files.
   -- hs-source-dirs:      
