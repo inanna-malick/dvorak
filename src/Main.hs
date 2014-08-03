@@ -1,30 +1,23 @@
 module Main where
 
 import UI.NCurses
-import Data.Map (Map)
-import qualified Data.Map as Map
 import Text.CSV
-import System.Random
-
+import Utils
+ 
 main :: IO ()
 main =
  do words <- loadwords
     topwords <- rnd_select words 5
     runCurses $ do
         setEcho False
+	setCursorMode CursorInvisible 
 	w <- defaultWindow
 	cyan <- newColorID ColorCyan ColorBlack 3 
 	white <- newColorID ColorWhite ColorBlack 4 
-	setCursorMode CursorInvisible 
 	(rows, cols) <- screenSize
 	let config = Config {stdColor=white, emphasisColor=cyan, rows=rows, cols=cols}
 	w' <- demandWord w topwords config
 	closeWindow w'
-
--- taken from http://www.haskell.org/haskellwiki/index.php?title=99_questions/Solutions/23
-rnd_select xs n = do
-    gen <- getStdGen
-    return $ take n [ xs !! x | x <- randomRs (0, (length xs) - 1) gen]
 
 
 loadwords :: IO [String]
@@ -43,16 +36,14 @@ renderWindow w (WData lines config) =  renderLines
   where startRow = rows config `div` 4
         renderLines = 
             do clearScreen w
-               updateWindow w $ sequence $ map updateWord (zipWithRow lines) 
+               updateWindow w $ sequence $ map updateWord (zip lines [startRow..]) 
                render
         updateWord (line,row) =
             do drawBox Nothing Nothing
                moveCursor row (cols config `div` 2)
                text line
                moveCursor 0 0
-        zipWithRow :: [Line] -> [(Line, Integer)]
-        zipWithRow xs = zip xs $ [startRow..endRow]
-               where endRow = startRow - 1 + toInteger (length xs)
+
 
 clearScreen :: Window -> Curses ()
 clearScreen w = 
@@ -65,43 +56,36 @@ clearScreen w =
 
 demandWord :: Window -> [String] -> Config -> Curses Window
 demandWord w [] _ = return w
-demandWord w (next:words) config = 
-        do step [] next 
-           demandWord w words config
+demandWord w (next:words) config = do step [] next >> demandWord w words config
   where step typed (c:cs) = 
-             do renderWindow w wdata
-                demandChar w $ qwertyToDvorak c
-                step (typed ++ [c]) cs
-          where wdata = WData wlines config
-                currLine = Line [(typed, emphasisColor config), (c:cs, stdColor config)]
-                wlines = currLine:rlines
+              do renderWindow w wdata
+                 demandChar w $ qwertyToDvorak c
+                 step (typed ++ [c]) cs
+           where wdata = WData wlines config
+                 currLine = Line [(typed, emphasisColor config), (c:cs, stdColor config)]
+                 wlines = currLine:rlines
 
-        step typed [] = 
-            do renderWindow w wdata
-               demandChar w ' '
-          where wdata = WData wlines config
-                currLine = Line [(typed, emphasisColor config)]
-                wlines = currLine:rlines
+        step typed [] = renderWindow w wdata >> demandChar w ' '
+           where wdata = WData wlines config
+                 currLine = Line [(typed, emphasisColor config)]
+                 wlines = currLine:rlines
 
         rlines = map toline words
-            where toline s = Line [(s, stdColor config)] 
+           where toline s = Line [(s, stdColor config)] 
 
 
 
 
 demandChar :: Window -> Char -> Curses()
 demandChar w c = loop where
-    loop = do
-        ev <- getEvent w Nothing
-        handleEvent ev
+    loop = getEvent w Nothing >>= handleEvent
     
     handleEvent (Just (EventCharacter c')) 
          | c' == c    = return()
 	 | c' == '\ESC' = closeWindow w >> error "quit"
-         | otherwise  = do flash
-                           loop
-    handleEvent ev = 
-             loop
+         | otherwise  = flash >> loop
+
+    handleEvent _ = loop
                   
 -- consider adding rows/columns
 data Config = Config { stdColor :: ColorID
@@ -114,15 +98,5 @@ data Config = Config { stdColor :: ColorID
 data Line = Line [(String, ColorID)]
 
 data WData= WData [Line] Config
-
-
--- thank you mysterious pastebin stranger (code from http://pastebin.com/wYSrKB6z)
-dvorak = " `1234567890[]',.pyfgcrl/=aoeuidhtns-\\;qjkxbmwvz~!@#$%^&*(){}\"<>PYFGCRL?+AOEUIDHTNS_|:QJKXBMWVZ"
-qwerty = " `1234567890-=qwertyuiop[]asdfghjkl;'\\zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL:\"|ZXCVBNM<>?"
-qwertyDvorakMap = Map.fromList (zip dvorak qwerty)
-
-qwertyToDvorak:: Char -> Char
-qwertyToDvorak c = qwertyDvorakMap Map.! c
-
 
 
