@@ -23,22 +23,24 @@ interpret prog = do
   interpret' cf w (Free (Signal sig next)) = case (sig) of 
         (Success) -> flash >> interpret' cf w next
         (WrongChar) -> flash >> interpret' cf w next
-  interpret' cf w (Free (PrintLine (Line xs) next)) = do -- this does not work
+  interpret' cf w (Free (Print lines next)) = do -- this does not work
         clearScreen w
         (rows,cols) <- screenSize
         let row = rows `div` 4
         let col = cols `div` 2
         updateWindow w $ drawBox Nothing Nothing
-        updateWindow w $ moveCursor row col
-        updateWindow w $ updates 
+        updateWindow w $ sequence $ map update $ zip3 lines [row..rows] (repeat col)
         render
         interpret' cf w next
-    where updates = sequence $ map draw xs
+    where update ((Line ln), row, col) = do
+              moveCursor row col
+              sequence $ map draw ln
           draw (c, s) = do setColor (cf c) >> drawString s >> setColor defaultColorID
   interpret' cf w (Free (GetChar g)) = do
         c <- loop
         interpret' cf w (g c)
     where loop = getEvent w Nothing >>= handleEvent  
+          handleEvent (Just (EventCharacter '\ESC')) = error "quit"
           handleEvent (Just (EventCharacter c)) = return c
           handleEvent _ = loop
 

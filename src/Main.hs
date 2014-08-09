@@ -19,20 +19,21 @@ main = do
 simp = println (Line [(White, "foo")]) >> getchar
 
 dvorak :: [String] -> Program ()
-dvorak (x:xs) = do
-  requestword x 
-  dvorak xs
-dvorak [] = return ()
+dvorak = requestwords 
 
 
-requestword s = step [] s
+requestwords (s:rest) = step [] s
   where step typed totype@(h:t) = do
-          println $ Line [(Cyan, typed), (White, totype)]
+          let current = Line [(Cyan, typed), (White, totype)]
+          let next = map (\x -> Line [(White, x)]) rest
+          printlns $ current : next
           requestchar h
           step (typed ++ [h]) t
         step typed [] = do
           println $ Line [(Cyan, typed)]
-    
+          requestwords rest
+
+requestwords [] = return ()
   
 
 requestchar c = do
