@@ -12,9 +12,9 @@ rnd_select xs n = do
 
 
 -- thank you mysterious pastebin stranger (code from http://pastebin.com/wYSrKB6z)
-dvorak = " `1234567890[]',.pyfgcrl/=aoeuidhtns-\\;qjkxbmwvz~!@#$%^&*(){}\"<>PYFGCRL?+AOEUIDHTNS_|:QJKXBMWVZ"
-qwerty = " `1234567890-=qwertyuiop[]asdfghjkl;'\\zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL:\"|ZXCVBNM<>?"
-qwertyDvorakMap = Map.fromList (zip dvorak qwerty)
-
 qwertyToDvorak:: Char -> Char
 qwertyToDvorak c = qwertyDvorakMap Map.! c
+  where
+  dvorak = " `1234567890[]',.pyfgcrl/=aoeuidhtns-\\;qjkxbmwvz~!@#$%^&*(){}\"<>PYFGCRL?+AOEUIDHTNS_|:QJKXBMWVZ"
+  qwerty = " `1234567890-=qwertyuiop[]asdfghjkl;'\\zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL:\"|ZXCVBNM<>?"
+  qwertyDvorakMap = Map.fromList (zip dvorak qwerty)
