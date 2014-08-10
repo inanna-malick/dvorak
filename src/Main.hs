@@ -11,8 +11,8 @@ import Source
 main :: IO ()
 main = do
   words <- loadwords
-  topwords <- rnd_select words 5
-  runCurses $ interpret $ dvorak topwords
+  shuffled <- shuffle words
+  runCurses $ interpret $ dvorak shuffled
   return ()
 
 
@@ -25,7 +25,7 @@ dvorak = requestwords
 requestwords (s:rest) = step [] s
   where step typed totype@(h:t) = do
           let current = Line [(Cyan, typed), (White, totype)]
-          let next = map (\x -> Line [(White, x)]) rest
+          let next = map (\x -> Line [(Magenta, x)]) rest
           printlns $ current : next
           requestchar h
           step (typed ++ [h]) t

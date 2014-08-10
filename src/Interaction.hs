@@ -2,7 +2,7 @@ module Interaction where
 
 import Control.Monad.Free
 
-data ColorType = Cyan | White deriving (Show, Eq)
+data ColorType = Cyan | White | Magenta deriving (Show, Eq)
 data Line = Line [(ColorType, String)] deriving (Show, Eq)
 
 data SignalType = Success | WrongChar deriving (Show, Eq)

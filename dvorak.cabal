@@ -68,7 +68,8 @@ executable dvorak
                        containers,
                        csv,
                        free,
-                       random
+                       random,
+                       array
 
   
   -- Base language which the package is written in.
