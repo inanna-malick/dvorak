@@ -30,18 +30,24 @@ interpret prog = do
         (rows,cols) <- screenSize
         let row = rows `div` 4
         let col = cols `div` 2
-        updateWindow w $ drawBox Nothing Nothing
-        updateWindow w $ sequence $ map update $ zip3 lines [row..(rows-1)] (repeat col)
+        updateWindow w $ do 
+            drawBox Nothing Nothing
+            let positions = zip [row..(rows-2)] (repeat col)
+            sequence $ update `map` zip lines positions
         render
         interpret' cf w next
-    where update ((Line ln), row, col) = do
-              moveCursor row col
-              sequence $ map draw ln
-          draw (c, s) = do setColor (cf c) >> drawString s >> setColor defaultColorID
+    where update ((Line ln), (row, col)) = do
+            moveCursor row col
+            sequence $ map draw ln
+          draw (c, s) = do 
+            setColor (cf c)
+            drawString s
+            setColor defaultColorID
   interpret' cf w (Free (GetChar g)) = loop
-        
     where loop = getEvent w Nothing >>= handleEvent  
-          handleEvent (Just (EventCharacter '\ESC')) = closeWindow w >> fail "ESC => Quit" --Esc takes weirdly longer than, say, '1' to fire. o well.
+          handleEvent (Just (EventCharacter '\ESC')) = do
+            closeWindow w 
+            fail "ESC => Quit" --Esc takes weirdly longer than, say, '1' to fire. o well.
           handleEvent (Just (EventCharacter c)) = interpret' cf w (g c)
           handleEvent _ = loop
 

@@ -28,11 +28,13 @@ printlns :: [Line] -> Program ()
 printlns l = liftF (Print l ())
 
 println :: Line -> Program ()
-println l = liftF (Print [l] ())
+println = printlns . (:[])
 
--- todo: use println to implement
 printstr :: String -> Program ()
-printstr s = liftF (Print [Line [(White, s)]]  ())
+printstr = println . txt
+
+txt :: String -> Line
+txt s = Line [(White, s)]
 
 signal :: SignalType -> Program ()
 signal sig = liftF (Signal sig ())
