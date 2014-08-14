@@ -11,10 +11,12 @@ interpret prog = do
     setCursorMode CursorInvisible
     cyan <- newColorID ColorCyan ColorBlack 3 
     white <- newColorID ColorWhite ColorBlack 4
-    magenta <- newColorID ColorMagenta ColorBlack 5
-    let colorFor c | c == Cyan = cyan
-                   | c == White = white
-                   | c == Magenta = magenta
+    red <- newColorID ColorWhite ColorRed 5
+    magenta <- newColorID ColorMagenta ColorBlack 6
+    let colorFor Cyan = cyan
+        colorFor White = white
+        colorFor Magenta = magenta
+        colorFor Red = red
     w <- defaultWindow
     r <- interpret' colorFor w prog
     closeWindow w
@@ -28,8 +30,8 @@ interpret prog = do
   interpret' cf w (Free (Print lines next)) = do
         clearScreen w
         (rows,cols) <- screenSize
-        let row = rows `div` 4
-        let col = cols `div` 2
+        let row = 4
+        let col = 4
         updateWindow w $ do 
             drawBox Nothing Nothing
             let positions = zip [row..(rows-2)] (repeat col)
@@ -43,12 +45,13 @@ interpret prog = do
             setColor (cf c)
             drawString s
             setColor defaultColorID
-  interpret' cf w (Free (GetChar g)) = loop
+  interpret' cf w (Free (GetEvent g)) = loop
     where loop = getEvent w Nothing >>= handleEvent  
           handleEvent (Just (EventCharacter '\ESC')) = do
             closeWindow w 
             fail "ESC => Quit" --Esc takes weirdly longer than, say, '1' to fire. o well.
-          handleEvent (Just (EventCharacter c)) = interpret' cf w (g c)
+          handleEvent (Just (EventCharacter c)) = interpret' cf w (g (Left c))
+          handleEvent (Just (EventSpecialKey k)) = interpret' cf w (g (Right k))
           handleEvent _ = loop
 
 

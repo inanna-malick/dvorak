@@ -1,28 +1,37 @@
 module Interaction where
 
 import Control.Monad.Free
+import UI.NCurses
 
-data ColorType = Cyan | White | Magenta deriving (Show, Eq)
+data ColorType = Cyan | White | Magenta | Red deriving (Show, Eq)
 data Line = Line [(ColorType, String)] deriving (Show, Eq)
 
 data SignalType = Success | WrongChar deriving (Show, Eq)
 
 data Interaction next = 
     Print [Line] next
-  | GetChar (Char -> next)
+  | GetEvent (Either Char Key -> next)
   | Signal SignalType next
 
 instance Functor Interaction where
     fmap f (Print strs x) = Print strs (f x)
     fmap f (Signal sig x) = Signal sig (f x)
-    fmap f (GetChar g) = GetChar (f . g)
+    fmap f (GetEvent g) = GetEvent (f . g)
 
 type Program = Free Interaction
 
-
 getchar :: Program Char
-getchar = liftF (GetChar id)
+getchar = do
+  ev <- getev
+  either return (\x -> getchar) ev
 
+getkey :: Program Key
+getkey = do
+  ev <- getev
+  either (\x -> getkey) return ev
+
+getev :: Program (Either Char Key)
+getev = liftF (GetEvent id)
 
 printlns :: [Line] -> Program ()
 printlns l = liftF (Print l ())
