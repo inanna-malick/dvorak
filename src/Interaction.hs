@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveFunctor #-}
 module Interaction where
 
 import Control.Monad.Free
@@ -11,12 +12,7 @@ data SignalType = Success | WrongChar deriving (Show, Eq)
 data Interaction next = 
     Print [Line] next
   | GetEvent (Either Char Key -> next)
-  | Signal SignalType next
-
-instance Functor Interaction where
-    fmap f (Print strs x) = Print strs (f x)
-    fmap f (Signal sig x) = Signal sig (f x)
-    fmap f (GetEvent g) = GetEvent (f . g)
+  | Signal SignalType next deriving (Functor)
 
 type Program = Free Interaction
 
