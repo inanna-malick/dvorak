@@ -36,9 +36,6 @@ dvorak (first:rest) = step [] (takeWhile (' '==) first) (dropWhile (' '==) first
             then step [] (typed ++ [c]) cs
             else step [c'] typed totype
 
-        step [] typed [] = do
-          println . Line $ [(Cyan, typed)]
-          dvorak rest
- 
+        step [] typed [] = dvorak rest
 
 dvorak [] = return ()

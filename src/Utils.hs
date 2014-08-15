@@ -1,4 +1,4 @@
-module Utils(qwertyToDvorak)  where
+module Utils(qwertyToDvorak) where
 
 import Data.Map (Map)
 import qualified Data.Map as Map

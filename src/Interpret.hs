@@ -1,4 +1,4 @@
-module Interpret where
+module Interpret(interpret) where
 
 import Control.Monad.Free
 import UI.NCurses
