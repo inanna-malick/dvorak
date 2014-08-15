@@ -57,7 +57,6 @@ executable dvorak
   other-modules:       Utils,
                        Interaction,
                        Interpret,
-                       Source,
                        GenScala
   
   -- LANGUAGE extensions used by modules in this package.
@@ -69,8 +68,6 @@ executable dvorak
                        containers,
                        csv,
                        free,
-                       random,
-                       array,
                        QuickCheck
   
   -- Base language which the package is written in.

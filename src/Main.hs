@@ -1,12 +1,10 @@
 module Main where
 
--- import Text.CSV
 import Utils
 import Interaction
 import Control.Monad.Free
 import UI.NCurses
 import Interpret
-import Source
 import GenScala
 
 main :: IO ()
@@ -36,7 +34,7 @@ dvorak (first:rest) = step [] (takeWhile (' '==) first) (dropWhile (' '==) first
           let next = map (Line . (:[]) ) $ zip (repeat White) rest
           printlns $ current : next
           c' <- getchar
-          if (c' == c) 
+          if c' == c
             then step [] (typed ++ [c]) cs
             else step [c'] typed totype
 
