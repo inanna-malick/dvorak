@@ -11,23 +11,13 @@ data SignalType = Success | WrongChar deriving (Show, Eq)
 
 data Interaction next = 
     Print [Line] next
-  | GetEvent (Either Char Key -> next)
+  | GetChar (Char -> next)
   | Signal SignalType next deriving (Functor)
 
 type Program = Free Interaction
 
 getchar :: Program Char
-getchar = do
-  ev <- getev
-  either return (const getchar) ev
-
-getkey :: Program Key
-getkey = do
-  ev <- getev
-  either (const getkey) return ev
-
-getev :: Program (Either Char Key)
-getev = liftF (GetEvent id)
+getchar = liftF (GetChar id)
 
 printlns :: [Line] -> Program ()
 printlns l = liftF (Print l ())
