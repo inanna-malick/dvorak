@@ -23,12 +23,12 @@ type Program = Free Interaction
 getchar :: Program Char
 getchar = do
   ev <- getev
-  either return (\x -> getchar) ev
+  either return (const getchar) ev
 
 getkey :: Program Key
 getkey = do
   ev <- getev
-  either (\x -> getkey) return ev
+  either (const getkey) return ev
 
 getev :: Program (Either Char Key)
 getev = liftF (GetEvent id)
