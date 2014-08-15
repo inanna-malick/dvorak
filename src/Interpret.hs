@@ -22,7 +22,7 @@ interpret prog = do
   where 
   interpret' :: (ColorType -> ColorID) -> Window -> Program r -> Curses r
   interpret' _ _ (Pure r) = return r
-  interpret' cf w (Free (Signal sig next)) = case (sig) of 
+  interpret' cf w (Free (Signal sig next)) = case sig of 
         (Success) -> flash >> interpret' cf w next
         (WrongChar) -> flash >> interpret' cf w next
   interpret' cf w (Free (Print lines next)) = do
@@ -33,12 +33,12 @@ interpret prog = do
         updateWindow w $ do 
             drawBox Nothing Nothing
             let positions = zip [row..(rows-2)] (repeat col)
-            sequence $ update `map` zip lines positions
+            mapM update (zip lines positions)
         render
         interpret' cf w next
-    where update ((Line ln), (row, col)) = do
+    where update (Line ln, (row, col)) = do
             moveCursor row col
-            sequence $ map draw ln
+            mapM draw ln
           draw (c, s) = do 
             setColor (cf c)
             drawString s
@@ -57,7 +57,7 @@ interpret prog = do
 clearScreen :: Window -> Curses ()
 clearScreen w = 
     do (rows, cols) <- screenSize
-       let blankline = (`replicate` ' ') . fromIntegral . (subtract 1) $ cols
+       let blankline = (`replicate` ' ') . fromIntegral . subtract 1 $ cols
        let clrLine row = moveCursor row 0 >> drawString blankline
-       updateWindow w $ sequence $ map clrLine [0..(rows-1)] 
+       updateWindow w $ mapM clrLine [0..(rows-1)] 
        render
