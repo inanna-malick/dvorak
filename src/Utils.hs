@@ -1,4 +1,4 @@
-module Utils where
+module Utils(shuffle, rnd_select, qwertyToDvorak)  where
 
 import System.Random
 import Data.Map (Map)
@@ -33,9 +33,11 @@ rnd_select xs n = do
 
 
 -- thank you mysterious pastebin stranger (code from http://pastebin.com/wYSrKB6z)
-qwertyToDvorak:: Char -> Char
-qwertyToDvorak c = qwertyDvorakMap Map.! c
-  where
-  dvorak = " `1234567890[]',.pyfgcrl/=aoeuidhtns-\\;qjkxbmwvz~!@#$%^&*(){}\"<>PYFGCRL?+AOEUIDHTNS_|:QJKXBMWVZ"
-  qwerty = " `1234567890-=qwertyuiop[]asdfghjkl;'\\zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL:\"|ZXCVBNM<>?"
-  qwertyDvorakMap = Map.fromList (zip dvorak qwerty)
+qwertyToDvorak:: Char -> Maybe Char
+qwertyToDvorak c | c`elem` dvorak = Just $ qwertyDvorakMap Map.! c
+                 | otherwise = Nothing
+  where qwertyDvorakMap = Map.fromList (zip dvorak qwerty)
+
+
+dvorak = " `1234567890[]',.pyfgcrl/=aoeuidhtns-\\;qjkxbmwvz~!@#$%^&*(){}\"<>PYFGCRL?+AOEUIDHTNS_|:QJKXBMWVZ"
+qwerty = " `1234567890-=qwertyuiop[]asdfghjkl;'\\zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}ASDFGHJKL:\"|ZXCVBNM<>?"

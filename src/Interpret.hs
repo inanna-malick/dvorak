@@ -9,14 +9,12 @@ interpret :: Program r -> Curses r
 interpret prog = do 
     setEcho False
     setCursorMode CursorInvisible
-    cyan <- newColorID ColorCyan ColorBlack 3 
-    white <- newColorID ColorWhite ColorBlack 4
-    red <- newColorID ColorWhite ColorRed 5
-    magenta <- newColorID ColorMagenta ColorBlack 6
+    cyan <- newColorID ColorCyan ColorBlack 1
+    white <- newColorID ColorWhite ColorBlack 2
+    magenta <- newColorID ColorWhite ColorMagenta 3
     let colorFor Cyan = cyan
         colorFor White = white
         colorFor Magenta = magenta
-        colorFor Red = red
     w <- defaultWindow
     r <- interpret' colorFor w prog
     closeWindow w
