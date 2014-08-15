@@ -10,7 +10,7 @@ import Data.Char
 genscala :: IO [String]
 genscala = do
   exprs <- sample' (arbitrary :: Gen Expr)
-  return $ lines $ concat $ intersperse "\n" $ map show exprs
+  return $ lines $ intercalate "\n" $ map show exprs
 
 
 data Expr = Call String [Expr]
@@ -20,13 +20,13 @@ data Expr = Call String [Expr]
 
 
 instance Show Expr where
-  show (Match matches) = "{\n" ++ concat (map (indent . show') matches) ++ "\n}"
+  show (Match matches) = "{\n" ++ concatMap (indent . show') matches ++ "\n}"
     where show' (un, ex) = "case " ++ show un ++ " => " ++ show ex
           indent s = unlines $ map (\x -> "  " ++ x) (lines s)
   show (Statement str) = str
   show (Call fname exprs) = fname ++ "(" ++ body ++ ")"
-    where body = concat . (intersperse ", ") . (map show) $ exprs
-  show (Op ex1 op ex2) = (show ex1) ++ " " ++ op ++ " " ++ (show ex2)
+    where body = intercalate ", " . map show $ exprs
+  show (Op ex1 op ex2) = show ex1 ++ " " ++ op ++ " " ++ show ex2
 
 
 data Unapply = Unapply String
@@ -36,7 +36,7 @@ data Unapply = Unapply String
 instance Show Unapply where
   show (Unapply str) = str
   show (UnapplyClass str xs) = str ++ "(" ++ body ++ ")" 
-    where body = concat . (intersperse ", ") . (map show) $ xs
+    where body = intercalate ", " . map show $ xs
 
 
 
@@ -57,7 +57,7 @@ instance Show Unapply where
 ngram :: Gen String
 ngram = oneof [expr, literal]
   where literal = fmap (\x -> "\"" ++ x ++ "\"") word
-        expr  = fmap (concat . (intersperse ".")) parts
+        expr  = fmap (intercalate ".") parts
         parts = shortlist' $ oneof [word, typed]
         typed = do
            a <- word
@@ -66,7 +66,7 @@ ngram = oneof [expr, literal]
         word  :: Gen String
         word  = oneof [lower, upper]
         lower = elements common
-        upper = elements $ fmap (\(h:t) -> (toUpper h):t) common
+        upper = elements $ fmap (\(h:t) -> toUpper h:t) common
 
 
 
@@ -82,7 +82,7 @@ shortlist = shortlist' arbitrary
 instance Arbitrary Unapply where
   arbitrary = frequency [(8,simple), (2,complex)]
     where 
-     simple = liftM Unapply $ ngram
+     simple = liftM Unapply ngram
      complex = liftM2 UnapplyClass ngram shortlist
   
 
