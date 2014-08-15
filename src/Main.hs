@@ -11,7 +11,7 @@ import GenScala
 
 main :: IO ()
 main = do
-  words <- examples
+  words <- genscala
   runCurses . interpret . dvorak $ words
   return ()
 
