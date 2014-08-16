@@ -10,9 +10,8 @@ import GenScala
 main :: IO ()
 main = do
   words <- genscala
-  runCurses . interpret . dvorak $ words
+  (runCurses . interpret . dvorak) words
   return ()
-
 
 
 dvorak :: [String] -> Program ()
@@ -22,20 +21,28 @@ dvorak (first:rest) = step [] (takeWhile (' '==) first) (dropWhile (' '==) first
           let current = Line [(Cyan, typed), (Magenta, reverse wrong), (White, drop (length wrong) totype)]
           let next = map (Line . (:[]) ) $ zip (repeat White) rest
           printlns $ current : next
-          c <- getchar --todo: need to throw away garbage chars (aka anything not space, tab, backspace or in dvorak mapping)
+          c <- dvorakChar
           if c == '\DEL' 
-            then step ws typed totype -- this seems to be the actual 'backspace'
+            then step ws typed totype
             else step (c:wrong) typed totype
-          
+
         step [] typed totype@(c:cs) = do
           let current = Line [(Cyan, typed), (White, totype)]
           let next = map (Line . (:[]) ) $ zip (repeat White) rest
           printlns $ current : next
-          c' <- getchar
-          if c' == c
-            then step [] (typed ++ [c]) cs
-            else step [c'] typed totype
+          c' <- dvorakChar
+	  if c' /= '\DEL'
+	    then if c' == c
+              then step [] (typed ++ [c']) cs
+              else step [c'] typed totype
+            else step [] typed totype  
 
         step [] typed [] = dvorak rest
 
 dvorak [] = return ()
+
+
+dvorakChar ::  Program Char
+dvorakChar = do 
+        c <- getchar
+	maybe dvorakChar return (qwertyToDvorak c)
