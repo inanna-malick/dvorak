@@ -5,75 +5,79 @@ import Test.QuickCheck
 import Test.QuickCheck.Arbitrary
 import Control.Monad
 import Data.Char
-
+import Control.Applicative
 
 genscala :: IO [String]
 genscala = do
-  exprs <- sample' (arbitrary :: Gen Expr)
+  exprs <- (concat . repeat) <$> sample' (arbitrary :: Gen Expr)
   return $ lines $ intercalate "\n" $ map show exprs
 
 
-data Expr = Call String [Expr]
-          | Op Expr String Expr
+data Expr = Call ScalaName [Expr]
+          | Op Expr Operator Expr
           | Match [(Unapply, Expr)] 
-          | Statement String
+          | Expr ScalaName
 
+data Unapply = Unapply Literal
+             | UnapplyClass ScalaName [Unapply]
+
+-- a.B.c[A].d[F]
+newtype ScalaName = ScalaName String
+
+instance Show ScalaName where
+  show (ScalaName s) = s
+
+instance Arbitrary ScalaName where
+        arbitrary = fmap (ScalaName . intercalate ".") parts
+            where parts = shortlist' $ oneof [word, typed]
+                  typed = do
+                    a <- word
+                    b <- upper
+                    return (a ++ "[" ++ b ++ "]")
+                  word  = oneof [lower, upper]
+                  lower = elements ngrams
+                  upper = elements $ fmap (\(h:t) -> toUpper h:t) ngrams
+
+newtype Literal = Literal String
+
+instance Arbitrary Literal where
+        arbitrary = Literal <$> oneof [char, string]
+          where char = elements $ map (wrap '\'' . (:[]) ) ['a'..'b']
+                string = elements $ map (wrap '"') ngrams
+                wrap c s = [c] ++ s ++ [c]
+
+instance Show Literal where
+  show (Literal s) = s
 
 instance Show Expr where
-  show (Match matches) = "{\n" ++ concatMap (indent . show') matches ++ "\n}"
+  show (Match matches) = "{\n" ++ concatMap (indent . show') matches ++ "}"
     where show' (un, ex) = "case " ++ show un ++ " => " ++ show ex
-          indent s = unlines $ map (\x -> "  " ++ x) (lines s)
-  show (Statement str) = str
-  show (Call fname exprs) = fname ++ "(" ++ body ++ ")"
+          indent s = unlines $ map ("  "++) (lines s)
+  show (Expr (ScalaName s)) = s
+  show (Call (ScalaName fname) exprs) = fname ++ "(" ++ body ++ ")"
     where body = intercalate ", " . map show $ exprs
-  show (Op ex1 op ex2) = show ex1 ++ " " ++ op ++ " " ++ show ex2
-
-
-data Unapply = Unapply String
-             | UnapplyClass String [Unapply] deriving (Eq)
-
+  show (Op ex1 (Operator op) ex2) = show ex1 ++ " " ++ op ++ " " ++ show ex2
 
 instance Show Unapply where
-  show (Unapply str) = str
-  show (UnapplyClass str xs) = str ++ "(" ++ body ++ ")" 
+  show (Unapply (Literal s)) = s
+  show (UnapplyClass (ScalaName s) xs) = s ++ "(" ++ body ++ ")" 
     where body = intercalate ", " . map show $ xs
 
+newtype Operator = Operator String
 
+instance Show Operator where
+        show (Operator s) = s
 
---todo: add comments and comment blocks as top-level constructs. Only ever need to be on own line, don't need to contain more than a token char or two
-{- ex:
-
-/**
- * ab
- */
-
-// ab
-
-/* ab */
-
--}
-
---todo: rename, make this OR .-sep method names, various literals. Key is ' and " chars, but can also have numbers
-ngram :: Gen String
-ngram = oneof [expr, literal]
-  where literal = fmap (\x -> "\"" ++ x ++ "\"") word
-        expr  = fmap (intercalate ".") parts
-        parts = shortlist' $ oneof [word, typed]
-        typed = do
-           a <- word
-           b <- upper
-           return (a ++ "[" ++ b ++ "]")
-        word  :: Gen String
-        word  = oneof [lower, upper]
-        lower = elements common
-        upper = elements $ fmap (\(h:t) -> toUpper h:t) common
-
-
+instance Arbitrary Operator where
+        arbitrary = elements operators
+            where operators = Operator <$> ["+", "-", "*", "^", ">", "<", "<=", ">=", "|+|", ">|", ">>=", "|>|", "<*>",  "<**>", "|@|", ">=>", "&&", "||", "!", "?"]
 
 shortlist' :: Gen a -> Gen [a]
-shortlist' g = oneof $ map sequence [[g],  
-                                    [g, g], 
-                                    [g, g, g]]
+shortlist' g = frequency $ zip [1..] gens
+    where gens = map sequence [[g,g,g],  
+                              [g, g], 
+                              [g]]
+
 
 shortlist :: Arbitrary a => Gen [a]
 shortlist = shortlist' arbitrary 
@@ -82,21 +86,19 @@ shortlist = shortlist' arbitrary
 instance Arbitrary Unapply where
   arbitrary = frequency [(8,simple), (2,complex)]
     where 
-     simple = liftM Unapply ngram
-     complex = liftM2 UnapplyClass ngram shortlist
+     simple = liftM Unapply arbitrary
+     complex = liftM2 UnapplyClass arbitrary shortlist
   
-
 instance Arbitrary Expr where
-  arbitrary = frequency [(3, statement), (1, op), (1, call), (1, match)]
+  arbitrary = frequency [(3, expr), (1, op), (1, call), (1, match)]
     where
      match = liftM Match shortlist
-     statement = liftM Statement ngram
-     call = liftM2 Call ngram shortlist
-     op = liftM3 Op arbitrary (elements operators) arbitrary
+     expr = liftM Expr arbitrary
+     call = liftM2 Call arbitrary shortlist
+     op = liftM3 Op arbitrary arbitrary arbitrary
 
-operators = ["+", "-", "*", "^", ">", "<", "<=", ">=", "|+|", ">|", ">>=", "|>|", "<*>",  "<**>", "|@|", ">=>", "&&", "||", "!", "?"]
-
-common = ["th", "he", "an", "in", "er", "nd", "ou",
+--ngrams two-character strings
+ngrams = ["th", "he", "an", "in", "er", "nd", "ou",
           "re", "ha", "ed", "on", "at", "hi", "to", 
           "en", "it", "ng", "as", "is", "st", "or", 
           "ar", "me", "es", "wa", "le", "te", "ll", 
