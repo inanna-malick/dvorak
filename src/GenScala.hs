@@ -101,16 +101,15 @@ instance Arbitrary Expr where
 ngrams = ["th", "he", "an", "in", "er", "nd", "ou",
           "re", "ha", "ed", "on", "at", "hi", "to", 
           "en", "it", "ng", "as", "is", "st", "or", 
-          "ar", "me", "es", "wa", "le", "te", "ll", 
+          "ar", "me", "es", "wa", "le", "te", "ey", 
           "ve", "se", "of", "ea", "ne", "ro", "nt", 
           "ut", "ho", "al", "no", "ow", "de", "be", 
           "om", "ad", "ti", "we", "co", "yo", "wh", 
-          "el", "ee", "ri", "oo", "ot", "li", "ur", 
+          "el", "ee", "ri", "go", "ot", "li", "ur", 
           "fo", "sh", "ai", "ch", "so", "wi", "lo", 
           "et", "id", "la", "ma", "ld", "un", "im", 
           "us", "ce", "ay", "do", "ul", "ke", "ra", 
           "sa", "gh", "il", "ly", "ca", "ol", "ta", 
           "ac", "pe", "wo", "ge", "si", "ck", "ig", 
-          "ic", "bu", "di", "tr", "ir", "rs", "bo", 
-          "go", "ey"]
+          "ic", "bu", "di", "tr", "ir", "rs", "bo"] 
 
