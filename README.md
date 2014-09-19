@@ -1,7 +1,7 @@
 dvorak practice
 ======
 
-I've learning the alphanumeric Dvorak key mappings using learn.dvorak.nl, which offers problem sets made up of english words. I greatly prefer this to the standard method of typing random sequences of characters, but as a programmer I can't switch over to Dvorak before I'm somewhat productive using it, which means memorizing the new locations of -]=',/;{_}+\"<>?:[. I initially considered mining github repos for practice text, but I don't *want* plentiful comments and descriptive function names. In fact, it doesn't actually need to compile. What would be ideal is a sort of pidgin Scala, chock full of operators, brackets and with no type or val name longer than, say, two characters.
+I'm learning the alphanumeric Dvorak key mappings using learn.dvorak.nl, which offers problem sets made up of english words. I greatly prefer this to the standard method of typing random sequences of characters, but as a programmer I can't switch over to Dvorak before I'm productive using it, which means memorizing the new locations of -]=',/;{_}+\"<>?:[. I initially considered mining github repos for practice text, but I don't *want* plentiful comments and descriptive function names. In fact, it doesn't actually need to compile. What would be ideal is a sort of pidgin Scala, chock full of operators, brackets and with no type or val name longer than, say, two characters.
 
 Something like this:
 
